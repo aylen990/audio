@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mensaje de Cartman</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            overscroll-behavior: none;
+            font-family: 'Arial', sans-serif;
+            background: #e5e9d8;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            text-align: center;
+            position: relative;
+        }
+        
+        .cartman-image {
+            width: 200px;
+            height: 200px;
+            /* border-radius: 50%; */
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            /* box-shadow: 0 10px 30px rgba(0,0,0,0.3); */
+            /* background: #f0f0f0; */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* color: #666; */
+            font-size: 16px;
+            text-align: center;
+            /* border: 3px solid #333; */
+        }
+        /* .cartman-image:hover {
+            transform: scale(1.1);
+        } */
+        
+        .speech-bubble {
+            position: absolute;
+            bottom: 220px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border: 3px solid #333;
+            border-radius: 20px;
+            padding: 20px;
+            width: 350px;
+            max-width: 90vw;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .speech-bubble.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-10px);
+        }
+        
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 15px solid white;
+            
+        }
+        
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -18px;
+            left: 47px;
+            width: 0;
+            height: 0;
+            border-left: 18px solid transparent;
+            border-right: 18px solid transparent;
+            border-top: 18px solid #333;
+            
+        }
+        
+        .message-text {
+            font-size: 16px;
+            line-height: 1.4;
+            color: #333;
+            text-align: left;
+            min-height: 60px;
+        }
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 20px;
+            background-color: #333;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="speech-bubble" id="speechBubble">
+            <div class="message-text" id="messageText">
+                
+            </div>
+        </div>
+        
+        <div class="cartman-image" id="cartmanImage">
+            <img src="stan-south-park-regular.png" alt="Cartman" style="width: 100%;  object-fit: cover; ">
+        </div>
+        
+        <!-- Elemento de audio (agrega tu archivo aquí) -->
+        <audio id="cartmanAudio" preload="auto">
+            <source src="audio.mp3" type="audio/mp3">
+        </audio>
+    </div>
+
+    <script>
+        const cartmanImage = document.getElementById('cartmanImage');
+        const speechBubble = document.getElementById('speechBubble');
+        const messageElement = document.getElementById('messageText');
+        const cartmanAudio = document.getElementById('cartmanAudio');
+        
+        let isTyping = false;
+        
+
+
+function typeWriterEffect(text, element, speed = 50) {
+    return new Promise((resolve) => {
+        element.innerHTML = '<span class="typing-cursor"></span>';
+
+        // Mostrar cursor 2 segundos antes de escribir
+        setTimeout(() => {
+            const cursor = element.querySelector('.typing-cursor');
+            if (cursor) cursor.remove();
+
+            // Iniciar escritura
+            let i = 0;
+            function typeChar() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(typeChar, speed);
+                } else {
+                    resolve();
+                }
+            }
+
+            typeChar();
+        }, 5500);
+    });
+}
+
+        // Evento de clic en Cartman con audio y efecto de escritura
+        cartmanImage.addEventListener('click', async function() {
+            if (isTyping) return; // Prevenir múltiples clics
+            
+            speechBubble.classList.add('show');
+            
+            // Reproducir audio
+            cartmanAudio.currentTime = 0; // Reiniciar desde el inicio
+            cartmanAudio.play().catch(e => {
+                console.log('Error reproduciendo audio:', e);
+            });
+            
+            // Escribir mensaje
+            const messageText = 'Querido Kyle... tienes un culito muy hermoso 🤤🍑🥰 podría dormir noche tras noche sobre él, déjame decirte. Quiero vivir contigo y tener tu culo de sombrero toda la ETERNIDAD! 💕';
+            
+            isTyping = true;
+            await typeWriterEffect(messageText, messageElement, 50);
+            isTyping = false;
+        });
+        
+        // Ocultar el globo si se hace clic fuera de Cartman
+        document.addEventListener('click', function(e) {
+            if (!cartmanImage.contains(e.target) && !speechBubble.contains(e.target)) {
+                speechBubble.classList.remove('show');
+                messageElement.innerHTML = '';
+                // Pausar audio si está sonando
+                if (cartmanAudio && !cartmanAudio.paused) {
+                    cartmanAudio.pause();
+                    cartmanAudio.currentTime = 0;
+                }
+            }
+        });
+        
+        // Prevenir que el clic en la burbuja la cierre
+        speechBubble.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    </script>
+</body>
+</html>
